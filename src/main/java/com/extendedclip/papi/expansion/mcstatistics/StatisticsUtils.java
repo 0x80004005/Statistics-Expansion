@@ -28,6 +28,8 @@ import org.bukkit.Statistic;
 
 import java.time.Duration;
 
+import static org.bukkit.Bukkit.getServer;
+
 public class StatisticsUtils {
     public static int getSecondsPlayed(final OfflinePlayer player, final boolean isLegacy, final boolean supportOfflinePlayers) {
         if(supportOfflinePlayers) return player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20;
@@ -42,6 +44,7 @@ public class StatisticsUtils {
     @SuppressWarnings("Guava")
     public static String getStatistic(final OfflinePlayer player, final String identifier, final boolean supportOfflinePlayers) {
         final Optional<Statistic> optional = Enums.getIfPresent(Statistic.class, identifier.toUpperCase());
+        OfflinePlayer[] allPlayers = getServer().getOfflinePlayers();
 
         if(!supportOfflinePlayers && !player.isOnline()) {
             return "Cannot get statistic, player is offline";
@@ -54,9 +57,13 @@ public class StatisticsUtils {
         if (optional.get().getType() != Statistic.Type.UNTYPED) {
             return "The statistic '" + identifier + "' require an argument, check https://helpch.at/docs/" + StatisticsExpansion.SERVER_VERSION + "/org/bukkit/Statistic.Type.html for more info" ;
         }
+        int total = 0;
+        for(OfflinePlayer p : allPlayers){
+            total += p.getStatistic(optional.get());
+        }
+        String totalReturn = String.valueOf(total);
+        return totalReturn;
 
-        int statistic = supportOfflinePlayers ? player.getStatistic(optional.get()) : player.getPlayer().getStatistic(optional.get());
-        return Integer.toString(statistic);
     }
 
     public static boolean isItem(final Material material, final boolean isLegacy) {

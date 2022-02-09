@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- *test
+ *
  */
 package com.extendedclip.papi.expansion.mcstatistics;
 
@@ -33,29 +33,26 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
 import org.bukkit.entity.EntityType;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
+
+import static org.bukkit.Bukkit.getServer;
 
 public class StatisticsExpansion extends PlaceholderExpansion implements Cacheable {
 
     private final ListMultimap<Statistic, Material> ignoredMaterials = ArrayListMultimap.create();
-    private final String VERSION = getClass().getPackage().getImplementationVersion();
+    private final String VERSION = "1.0";
     private final boolean isLegacy = !Enums.getIfPresent(Material.class, "TURTLE_HELMET").isPresent();
     public static final String SERVER_VERSION = Bukkit.getBukkitVersion().split("-")[0];
     private final boolean supportOfflinePlayers = Enums.getIfPresent(Material.class, "BEEHIVE").isPresent();
-    
+
     @Override
     public String getAuthor() {
-        return "clip";
+        return "medievalknievel";
     }
 
     @Override
     public String getIdentifier() {
-        return "statistic";
+        return "agstat";
     }
 
     @Override
@@ -66,98 +63,43 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
     @SuppressWarnings({"DuplicatedCode", "Guava"})
     @Override
     public String onRequest(OfflinePlayer player, String identifier) {
-        if (player == null) {
-            return "";
-        }
 
-        if (!supportOfflinePlayers && !player.isOnline()) {
-            return "";
-        }
-
-        final int secondsPlayed = StatisticsUtils.getSecondsPlayed(player, isLegacy, supportOfflinePlayers);
-        final int secondsSinceLastDeath = StatisticsUtils.getSecondsSinceLastDeath(player, isLegacy, supportOfflinePlayers);
+        OfflinePlayer[] allPlayers = getServer().getOfflinePlayers();
+        final int splitterIndex = identifier.indexOf(':');
 
         switch (identifier.toLowerCase()) {
             case "mine_block": {
-                return calculateTotal(player, Statistic.MINE_BLOCK);
+                if (splitterIndex == -1) {
+                    return StatisticsUtils.getStatistic(player, identifier, supportOfflinePlayers);
+                }else{
+                    return calculateTotal(player, Statistic.MINE_BLOCK, allPlayers);
+                }
             }
-
             case "use_item": {
-                return calculateTotal(player, Statistic.USE_ITEM);
+                if (splitterIndex == -1) {
+                    return StatisticsUtils.getStatistic(player, identifier, supportOfflinePlayers);
+                }else{
+                    return calculateTotal(player, Statistic.USE_ITEM, allPlayers);
+                }
             }
-
             case "break_item": {
-                return calculateTotal(player, Statistic.BREAK_ITEM);
+                if (splitterIndex == -1) {
+                    return StatisticsUtils.getStatistic(player, identifier, supportOfflinePlayers);
+                }else{
+                    return calculateTotal(player, Statistic.BREAK_ITEM, allPlayers);
+                }
             }
 
             case "craft_item": {
-                return calculateTotal(player, Statistic.CRAFT_ITEM);
-            }
-
-            /*
-             * Time played
-             */
-            case "time_played": {
-                return StatisticsUtils.formatTime(Duration.of(secondsPlayed, ChronoUnit.SECONDS));
-            }
-
-            case "time_played:seconds": {
-                //return seconds != 0 ? Long.toString(TimeUnit.MINUTES.toSeconds(1) - seconds) : "0";
-                return Integer.toString(secondsPlayed % 60);
-            }
-
-            case "time_played:minutes": {
-                //return minutes != 0 ? Long.toString(TimeUnit.HOURS.toMinutes(1) - minutes) : "0";
-                return Long.toString(TimeUnit.SECONDS.toMinutes(secondsPlayed) % 60);
-            }
-
-            case "time_played:hours": {
-                //return hours != 0 ? Long.toString(TimeUnit.DAYS.toHours(1) - hours) : "0";
-                return Long.toString(TimeUnit.SECONDS.toHours(secondsPlayed) % 24);
-            }
-
-            case "seconds_played": {
-                return Integer.toString(secondsPlayed);
-            }
-
-            case "minutes_played": {
-                return Long.toString(TimeUnit.SECONDS.toMinutes(secondsPlayed));
-            }
-
-            case "hours_played": {
-                return Long.toString(TimeUnit.SECONDS.toHours(secondsPlayed));
-            }
-
-            case "time_played:days":
-            case "days_played": {
-                return Long.toString(TimeUnit.SECONDS.toDays(secondsPlayed));
-            }
-
-            /*
-             * Time since last death
-             */
-            case "time_since_death": {
-                return StatisticsUtils.formatTime(Duration.of(secondsSinceLastDeath, ChronoUnit.SECONDS));
-            }
-
-            case "seconds_since_death": {
-                return Integer.toString(secondsSinceLastDeath);
-            }
-
-            case "minutes_since_death": {
-                return Long.toString(TimeUnit.SECONDS.toMinutes(secondsSinceLastDeath));
-            }
-
-            case "hours_since_death": {
-                return Long.toString(TimeUnit.SECONDS.toHours(secondsSinceLastDeath));
-            }
-
-            case "days_since_death": {
-                return Long.toString(TimeUnit.SECONDS.toDays(secondsSinceLastDeath));
+                if (splitterIndex == -1) {
+                    return StatisticsUtils.getStatistic(player, identifier, supportOfflinePlayers);
+                }
+                else{
+                    return calculateTotal(player, Statistic.CRAFT_ITEM, allPlayers);
+                }
             }
         }
 
-        final int splitterIndex = identifier.indexOf(':');
         // %statistic_<Statistic>%
         if (splitterIndex == -1) {
             return StatisticsUtils.getStatistic(player, identifier, supportOfflinePlayers);
@@ -178,7 +120,8 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
 
         final Statistic statistic = statisticOptional.get();
 
-        // %statistic_<Statistic>:<Material/Entity>%
+
+        // %agstat_<Statistic>:<Material/Entity>%
         if (!types.contains(",")) {
             switch (statistic.getType()) {
                 case BLOCK:
@@ -190,7 +133,12 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
                     }
 
                     try {
-                        return Integer.toString(supportOfflinePlayers ? player.getStatistic(statistic, material.get()) : player.getPlayer().getStatistic(statistic, material.get()));
+                        int total = 0;
+                        for(OfflinePlayer p : allPlayers){
+                            total += p.getStatistic(statistic, material.get());
+                        }
+                        String totalReturn = String.valueOf(total);
+                        return totalReturn;
                     } catch (IllegalArgumentException e) {
                         errorLog("Could not get the statistic '" + statistic.name() + "' for '" + material.get().name() + "'", e);
                         return "Could not get the statistic '" + statistic.name() + "' for '" + material.get().name() + "'";
@@ -203,15 +151,18 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
                     if (!entityType.isPresent()) {
                         return "Invalid entity " + types;
                     }
-
                     try {
-                        return Integer.toString(supportOfflinePlayers ? player.getStatistic(statistic, entityType.get()) : player.getPlayer().getStatistic(statistic, entityType.get()));
+                        int total = 0;
+                        for(OfflinePlayer p : allPlayers){
+                            total += p.getStatistic(statistic, entityType.get());
+                        }
+                        String totalReturn = String.valueOf(total);
+                        return totalReturn;
                     } catch (IllegalArgumentException e) {
                         errorLog("Could not get the statistic '" + statistic.name() + "' for '" + entityType.get().name() + "'", e);
                         return "Could not get the statistic '" + statistic.name() + "' for '" + entityType.get().name() + "'";
                     }
                 }
-
                 default:
                     break;
             }
@@ -219,7 +170,7 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
 
         // %statistic_<Statistic>:<Material/Entity>,<Material/Entity>,<Material/Entity>%
         final String[] args = types.split(",");
-        final AtomicInteger total = new AtomicInteger();
+        int total = 0;
 
         switch (statistic.getType()) {
             case BLOCK:
@@ -232,7 +183,10 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
                     }
 
                     try {
-                        total.addAndGet(supportOfflinePlayers ? player.getStatistic(statistic, material.get()) : player.getPlayer().getStatistic(statistic, material.get()));
+                        for(OfflinePlayer p : allPlayers){
+                            total += p.getStatistic(statistic, material.get());
+                        }
+
                     } catch (IllegalArgumentException e) {
                         errorLog("Could not get the statistic '" + statistic.name() + "' for '" + material.get().name() + "'", e);
                         break;
@@ -251,7 +205,10 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
                     }
 
                     try {
-                        total.addAndGet(supportOfflinePlayers ? player.getStatistic(statistic, entityType.get()) : player.getPlayer().getStatistic(statistic, entityType.get()));
+                        for(OfflinePlayer p : allPlayers){
+                            total += p.getStatistic(statistic, entityType.get());
+                        }
+
                     } catch (IllegalArgumentException e) {
                         errorLog("Could not get the statistic '" + statistic.name() + "' for '" + entityType.get().name() + "'", e);
                         break;
@@ -265,11 +222,12 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
                 break;
         }
 
-        return Integer.toString(total.get());
+        String totalReturn = String.valueOf(total);
+        return totalReturn;
     }
 
-    private String calculateTotal(final OfflinePlayer player, final Statistic statistic) {
-        final AtomicLong total = new AtomicLong();
+    private String calculateTotal(final OfflinePlayer player, final Statistic statistic, final OfflinePlayer[] allPlayers) {
+        String totalReturn = "";
 
         for (Material material : Material.values()) {
             if (ignoredMaterials.get(statistic).contains(material)) {
@@ -281,13 +239,19 @@ public class StatisticsExpansion extends PlaceholderExpansion implements Cacheab
             }
 
             try {
-                total.addAndGet(supportOfflinePlayers ? player.getStatistic(statistic, material) : player.getPlayer().getStatistic(statistic, material));
+                int total = 0;
+                for(OfflinePlayer p : allPlayers){
+
+                    total += p.getStatistic(statistic, material);
+                }
+                totalReturn = String.valueOf(total);
+
             } catch (IllegalArgumentException ignored) {
                 ignoredMaterials.put(statistic, material);
             }
         }
 
-        return Long.toString(total.get());
+        return totalReturn;
     }
 
     private void errorLog(final String message, final Throwable exception) {
