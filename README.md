@@ -8,7 +8,7 @@ Adds placeholders for minecraft statistics. Unlike the existing [Statistics-Expa
 
 #  Usage
 
-In my scenario, I'm using [DecentHolograms](https://www.spigotmc.org/resources/decent-holograms-1-8-1-18-papi-support-no-dependencies.96927/) to display the placeholder data in a spawn base. One of the primary reasons for using DecentHolograms is the ability to control refresh-rate of the placeholder. Due to the nature of the plugin, and the fact that the values are returned for an entire server population, controlloing how ofter the placeholder is updated keeps performance impacts low. Once a Hologram is created modifying the update-interval option is advised. Considering these are server-wide statistics I tend to use high refresh intervals as I don't need to know in real-time when someone jumps, mines a block type, etc. 
+In my scenario, I'm using [DecentHolograms](https://www.spigotmc.org/resources/decent-holograms-1-8-1-18-papi-support-no-dependencies.96927/) to display the placeholder data in a spawn base. One of the primary reasons for using DecentHolograms is the ability to control refresh-rate of the placeholder. Due to the nature of the plugin, and the fact that the values are returned for an entire server population, controlling how often the placeholder is updated keeps performance impacts low. Once a Hologram is created modifying the update-interval option is advised. Considering these are server-wide statistics I tend to use high refresh intervals as I don't need to know in real-time when someone jumps, mines a block type, etc. 
 
 Due to being built upon the existing Statistics-Expansion plugin requesting aggregate data requires a modified identifier, but the remaining commands structure is the same as the existing Statistics-Expansion. 
 
